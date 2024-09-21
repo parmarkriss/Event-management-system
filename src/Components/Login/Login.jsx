@@ -24,6 +24,7 @@ const Login = () => {
     const isLoggedIn = loginUser(formData.email, formData.password);
     if (isLoggedIn) {
       navigate('/create-event');
+      alert("Login has been successfully");
     } else {
       alert('Invalid credentials');
     }

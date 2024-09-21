@@ -2,8 +2,10 @@ import React, { useContext, useState } from 'react';
 import { EventContext } from './EventContext';
 import { UserContext } from '../UserContext';
 import { v4 as uuidv4 } from 'uuid'; 
+import { useNavigate } from 'react-router-dom';
 
 const CreateEvent = () => {
+    const navigate = useNavigate();
     const { addEvent } = useContext(EventContext);
     const { currentUser } = useContext(UserContext);
     const [eventData, setEventData] = useState({
@@ -62,10 +64,13 @@ const CreateEvent = () => {
         };
 
         addEvent(newEventData);
+        alert("Sussessfully submitted");
+        navigate('/view-event');
+        
 
-        // Clear form and reset image and preview
+        
         setEventData({
-            id: '', // Reset id
+            id: '',
             title: '',
             description: '',
             date: '',

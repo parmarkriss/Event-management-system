@@ -11,7 +11,7 @@ import CreateEvent from './Components/Pages/CreateEvent';
 import { EventProvider } from './Components/Pages/EventContext';
 import ViewEvent from './Components/Pages/ViewEvent';
 import EditEvent from './Components/Pages/EditEvent';
-import ProtectedRoute from './Components/ProtectedRoute'; // Import your ProtectedRoute component
+import ProtectedRoute from './Components/ProtectedRoute'; 
 
 function App() {
     return (

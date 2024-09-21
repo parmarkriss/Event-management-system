@@ -47,6 +47,7 @@ const EditEvent = () => {
           updatedEvent.image = imagePreview;
       }
       updateEvent(updatedEvent);
+      alert('Event deleted successfully.');
       navigate('/view-event');
   };
 
