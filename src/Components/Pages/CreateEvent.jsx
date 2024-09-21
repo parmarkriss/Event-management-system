@@ -78,7 +78,7 @@ const CreateEvent = () => {
     };
 
     return (
-        <div>
+        <div className="max-w-7xl mx-auto p-4">
             <h1 className="text-3xl font-bold mb-4 text-gray-950 text-center">Create Event</h1>
             <div className="bg-gray-100 max-w-3xl mx-auto mt-2 p-5 border rounded-lg shadow-md">
                 <form onSubmit={handleSubmit}>
@@ -105,8 +105,8 @@ const CreateEvent = () => {
                         />
                     </div>
 
-                    <div className="flex mb-4 space-x-4">
-                        <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row mb-4 space-x-0 sm:space-x-4">
+                        <div className="flex-1 mb-4 sm:mb-0">
                             <label className="block text-gray-800">Date:</label>
                             <input
                                 type="date"
@@ -117,7 +117,7 @@ const CreateEvent = () => {
                                 required
                             />
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 mb-4 sm:mb-0">
                             <label className="block text-gray-800">Location:</label>
                             <input
                                 type="text"
@@ -130,8 +130,8 @@ const CreateEvent = () => {
                         </div>
                     </div>
 
-                    <div className="flex mb-4 space-x-4">
-                        <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row mb-4 space-x-0 sm:space-x-4">
+                        <div className="flex-1 mb-4 sm:mb-0">
                             <label className="block text-gray-800">Max Attendees:</label>
                             <input
                                 type="number"
@@ -143,7 +143,7 @@ const CreateEvent = () => {
                                 required
                             />
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 mb-4 sm:mb-0">
                             <label className="block text-gray-800">Event Type:</label>
                             <select
                                 name="eventType"
@@ -177,7 +177,7 @@ const CreateEvent = () => {
                             <img
                                 src={imagePreview}
                                 alt="Event"
-                                className="w-50 h-50 object-cover rounded mt-2"
+                                className="w-full h-40 object-cover rounded mt-2"
                             />
                         </div>
                     )}

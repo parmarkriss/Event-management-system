@@ -27,34 +27,66 @@ const ViewEvent = () => {
 
     const handleRSVP = (eventId) => {
         const updatedEvents = events.map(event => {
-          if (event.id === eventId) {
-            const rsvpList = event.rsvpList || [];
-            if (currentUser && !rsvpList.includes(currentUser.id) && rsvpList.length < event.maxAttendees) {
-              alert(`RSVP successful for event: ${event.title}`);
-              return {
-                ...event,
-                rsvpList: [...rsvpList, currentUser.id] // Add user to RSVP list
-              };
-            } else if (rsvpList.includes(currentUser.id)) {
-              alert('You have already RSVPed for this event.');
-            } else if (rsvpList.length >= event.maxAttendees) {
-              alert('Sorry, the event has reached the maximum number of attendees.');
+            if (event.id === eventId) {
+                const rsvpList = event.rsvpList || [];
+                if (currentUser && !rsvpList.includes(currentUser.id) && rsvpList.length < event.maxAttendees) {
+                    alert(`RSVP successful for event: ${event.title}`);
+                    return {
+                        ...event,
+                        rsvpList: [...rsvpList, currentUser.id] // Add user to RSVP list
+                    };
+                } else if (rsvpList.includes(currentUser.id)) {
+                    alert('You have already RSVPed for this event.');
+                } else if (rsvpList.length >= event.maxAttendees) {
+                    alert('Sorry, the event has reached the maximum number of attendees.');
+                }
             }
-          }
-          return event;
+            return event;
         });
-    
+
         setEvents(updatedEvents);
         localStorage.setItem('events', JSON.stringify(updatedEvents)); // Save updated events to localStorage
-      };
+    };
+
+    const handleReset = () => {
+        setLocation('');
+        setDate('');
+        setEventType('');
+    };
 
     return (
         <div className="max-w-7xl mx-auto p-4">
             <h1 className="text-3xl font-bold mb-4 text-gray-950 text-center">Your Events</h1>
+
+            {/* Search Filters */}
             <div className="mb-4 flex flex-col md:flex-row justify-center space-x-2">
-                {/* Search Filters */}
-                {/* ... */}
+                <input
+                    type="text"
+                    placeholder="Search Location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="border border-gray-300 rounded p-2 mb-2 md:mb-0"
+                />
+                <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="border border-gray-300 rounded p-2 mb-2 md:mb-0"
+                />
+                <select
+                    value={eventType}
+                    onChange={(e) => setEventType(e.target.value)}
+                    className="border border-gray-300 rounded p-2 mb-2 md:mb-0"
+                >
+                    <option value="">Select Event Type</option>
+                    <option value="Conference">Conference</option>
+                    <option value="Workshop">Workshop</option>
+                    <option value="Webinar">Webinar</option>
+                    <option value="Meetup">Meetup</option>
+                </select>
+                <button onClick={handleReset} className="bg-red-500 text-white rounded ps-3 pe-3 ">Reset</button>
             </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {userEvents.length > 0 ? (
                     userEvents.map((event) => (
@@ -69,7 +101,7 @@ const ViewEvent = () => {
                             <p className="text-gray-500">Max Attendees: {event.maxAttendees}</p>
                             <button
                                 type="button"
-                                className="btn btn-primary"
+                                className="btn btn-primary me-2"
                                 onClick={() => handleRSVP(event.id)}
                                 disabled={!currentUser || event.rsvpList?.includes(currentUser.id) || (event.rsvpList?.length >= event.maxAttendees)}
                             >
@@ -86,7 +118,7 @@ const ViewEvent = () => {
                             <button
                                 type='button'
                                 className='btn btn-danger'
-                                onClick={() => handleDelete(event.id)} // Updated to handleDelete
+                                onClick={() => handleDelete(event.id)}
                             >
                                 Delete
                             </button>
