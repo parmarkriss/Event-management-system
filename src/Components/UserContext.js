@@ -1,25 +1,67 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
+// Create a UserContext
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+  const [users, setUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  const generateUserId = () => {
-    return `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  // Load users and logged-in user from localStorage when the app starts
+  useEffect(() => {
+    const savedUsers = JSON.parse(localStorage.getItem('users')) || [];
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser')) || null;
+    setUsers(savedUsers);
+    setCurrentUser(loggedInUser);  // Set the currently logged-in user
+  }, []);
+
+  // Save updated users to localStorage
+  useEffect(() => {
+    if (users.length > 0) {
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+  }, [users]);
+
+  // Store the logged-in user in localStorage
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('loggedInUser', JSON.stringify(currentUser));
+    }
+  }, [currentUser]);
+
+  // Register a new user
+  const registerUser = (newUser) => {
+    const existingUser = users.find(user => user.email === newUser.email);
+    if (!existingUser) {
+      const userId = Date.now();
+      const updatedUsers = [...users, { ...newUser, id: userId }];
+      setUsers(updatedUsers);
+      setCurrentUser({ ...newUser, id: userId });  // Set newly registered user as the logged-in user
+    } else {
+      console.log('User already exists!');
+    }
   };
 
-  const saveUser = (userData) => {
-    const userWithId = { ...userData, id: generateUserId() };
-    localStorage.setItem('user', JSON.stringify(userWithId));
-    setUser(userWithId);
+  // Login a user
+  const loginUser = (email, password) => {
+    const user = users.find(user => user.email === email && user.password === password);
+    if (user) {
+      setCurrentUser(user);
+      localStorage.setItem('loggedInUser', JSON.stringify(user));  // Save the logged-in user
+      return true;
+    }
+    return false;
+  };
+
+  const logoutUser = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('loggedInUser');
+
   };
 
   return (
-    <UserContext.Provider value={{ user, saveUser }}>
+    <UserContext.Provider value={{ users, currentUser, registerUser, loginUser, logoutUser}}>
       {children}
     </UserContext.Provider>
   );

@@ -1,174 +1,197 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { EventContext } from '../EventContext';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCalendarAlt, faMapMarkerAlt, faImage } from '@fortawesome/free-solid-svg-icons';
-import { Link } from 'react-router-dom';
+import React, { useContext, useState } from 'react';
+import { EventContext } from './EventContext';
+import { UserContext } from '../UserContext';
+import { v4 as uuidv4 } from 'uuid'; 
 
 const CreateEvent = () => {
-  const { addEvent } = useContext(EventContext);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    date: '',
-    location: '',
-    maxAttendees: '',
-    image: null,
-    eventType: '',
-    status: 'upcoming',
-  });
-
-  const [imagePreview, setImagePreview] = useState(null);
-
-  useEffect(() => {
-    const now = new Date();
-    const eventDate = new Date(formData.date);
-
-    if (eventDate < now) {
-      setFormData(prev => ({ ...prev, status: 'completed' }));
-    } else if (eventDate > now && eventDate < new Date(now.getTime() + 60 * 60 * 1000)) {
-      setFormData(prev => ({ ...prev, status: 'ongoing' }));
-    } else {
-      setFormData(prev => ({ ...prev, status: 'upcoming' }));
-    }
-  }, [formData.date]);
-
-  const handleChange = (e) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          image: reader.result,
-        }));
-        setImagePreview(URL.createObjectURL(file));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.title || !formData.description || !formData.date || !formData.location) {
-      alert('Please fill out all required fields.');
-      return;
-    }
-    addEvent(formData);
-    setFormData({
-      title: '',
-      description: '',
-      date: '',
-      location: '',
-      maxAttendees: '',
-      image: null,
-      eventType: '',
-      status: 'upcoming',
+    const { addEvent } = useContext(EventContext);
+    const { currentUser } = useContext(UserContext);
+    const [eventData, setEventData] = useState({
+        id: '', 
+        title: '',
+        description: '',
+        date: '',
+        location: '',
+        maxAttendees: '0',
+        eventType: '',
+        image: '',
     });
-    setImagePreview(null);
-  };
+    const [imagePreview, setImagePreview] = useState(null);
 
-  return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto bg-gray-100 shadow-lg rounded-lg">
-      <h2 className="text-xl sm:text-2xl font-bold mb-6 text-gray-800">Create Event</h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Form fields */}
-        <div className="flex flex-col space-y-1">
-          <label htmlFor="title" className="text-lg font-medium text-gray-700">Event Title</label>
-          <input
-            type="text"
-            id="title"
-            placeholder="Event Title"
-            value={formData.title}
-            onChange={handleChange}
-            className="p-3 border border-gray-300 rounded-md text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setEventData({ ...eventData, [name]: value });
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setEventData(prev => ({
+                    ...prev,
+                    image: reader.result,
+                }));
+                setImagePreview(URL.createObjectURL(file));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        // Determine the status based on the event date
+        const eventDate = new Date(eventData.date);
+        const currentDate = new Date();
+
+        let status = '';
+        if (eventDate < currentDate) {
+            status = 'Completed'; // Past date
+        } else if (eventDate.toDateString() === currentDate.toDateString()) {
+            status = 'Ongoing'; // Today's date
+        } else {
+            status = 'Upcoming'; // Future date
+        }
+
+        const newEventData = { 
+            ...eventData, 
+            id: uuidv4(), // Generate a unique ID
+            userId: currentUser.id, 
+            status 
+        };
+
+        addEvent(newEventData);
+
+        // Clear form and reset image and preview
+        setEventData({
+            id: '', // Reset id
+            title: '',
+            description: '',
+            date: '',
+            location: '',
+            maxAttendees: '',
+            eventType: '',
+            image: '',
+        });
+        setImagePreview(null);
+    };
+
+    return (
+        <div>
+            <h1 className="text-3xl font-bold mb-4 text-gray-950 text-center">Create Event</h1>
+            <div className="bg-gray-100 max-w-3xl mx-auto mt-2 p-5 border rounded-lg shadow-md">
+                <form onSubmit={handleSubmit}>
+                    <div className="mb-4">
+                        <label className="block text-gray-800">Title:</label>
+                        <input
+                            type="text"
+                            name="title"
+                            value={eventData.title}
+                            onChange={handleChange}
+                            className="w-full p-2 border border-gray-300 rounded"
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-800">Description:</label>
+                        <textarea
+                            name="description"
+                            value={eventData.description}
+                            onChange={handleChange}
+                            className="w-full p-2 border border-gray-300 rounded"
+                            required
+                        />
+                    </div>
+
+                    <div className="flex mb-4 space-x-4">
+                        <div className="flex-1">
+                            <label className="block text-gray-800">Date:</label>
+                            <input
+                                type="date"
+                                name="date"
+                                value={eventData.date}
+                                onChange={handleChange}
+                                className="w-full p-2 border border-gray-300 rounded"
+                                required
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <label className="block text-gray-800">Location:</label>
+                            <input
+                                type="text"
+                                name="location"
+                                value={eventData.location}
+                                onChange={handleChange}
+                                className="w-full p-2 border border-gray-300 rounded"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex mb-4 space-x-4">
+                        <div className="flex-1">
+                            <label className="block text-gray-800">Max Attendees:</label>
+                            <input
+                                type="number"
+                                name="maxAttendees"
+                                value={eventData.maxAttendees}
+                                onChange={handleChange}
+                                className="w-full p-2 border border-gray-300 rounded"
+                                min="0" 
+                                required
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <label className="block text-gray-800">Event Type:</label>
+                            <select
+                                name="eventType"
+                                value={eventData.eventType}
+                                onChange={handleChange}
+                                className="w-full p-2 border border-gray-300 rounded"
+                                required
+                            >
+                                <option value="">Select Event Type</option>
+                                <option value="Conference">Conference</option>
+                                <option value="Workshop">Workshop</option>
+                                <option value="Webinar">Webinar</option>
+                                <option value="Meetup">Meetup</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-800">Image:</label>
+                        <input
+                            type="file"
+                            name="image"
+                            onChange={handleFileChange}
+                            className="w-full p-2 border border-gray-300 rounded"
+                        />
+                    </div>
+
+                    {imagePreview && (
+                        <div className="mb-4">
+                            <h2 className="text-gray-800">Image Preview:</h2>
+                            <img
+                                src={imagePreview}
+                                alt="Event"
+                                className="w-50 h-50 object-cover rounded mt-2"
+                            />
+                        </div>
+                    )}
+
+                    <button
+                        type="submit"
+                        className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                        Create Event
+                    </button>
+                </form>
+            </div>
         </div>
-        <div className="flex flex-col space-y-1">
-          <label htmlFor="description" className="text-lg font-medium text-gray-700">Description</label>
-          <textarea
-            id="description"
-            placeholder="Event Description"
-            value={formData.description}
-            onChange={handleChange}
-            className="p-3 border border-gray-300 rounded-md text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
-          <div className="flex items-center border border-gray-300 rounded-md p-2 bg-white flex-grow">
-            <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-500 mr-2" />
-            <input
-              type="date"
-              id="date"
-              value={formData.date}
-              onChange={handleChange}
-              className="w-full p-2 border-none rounded-md text-gray-800"
-            />
-          </div>
-          <div className="flex items-center border border-gray-300 rounded-md p-2 bg-white flex-grow">
-            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-500 mr-2" />
-            <input
-              type="text"
-              id="location"
-              placeholder="Location"
-              value={formData.location}
-              onChange={handleChange}
-              className="w-full p-2 border-none rounded-md text-gray-800"
-            />
-          </div>
-        </div>
-        <div className="flex items-center border border-gray-300 rounded-md p-2 bg-white">
-          <FontAwesomeIcon icon={faImage} className="text-gray-500 mr-2" />
-          <input
-            type="file"
-            onChange={handleFileChange}
-            className="w-full p-2 border-none rounded-md text-gray-800"
-          />
-        </div>
-        {imagePreview && <img src={imagePreview} alt="Preview" className="w-full h-auto my-4" />}
-        <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0">
-          <div className="flex flex-col space-y-1 flex-grow">
-            <label htmlFor="maxAttendees" className="text-lg font-medium text-gray-700">Max Attendees</label>
-            <input
-              type="number"
-              id="maxAttendees"
-              placeholder="Max Attendees"
-              value={formData.maxAttendees}
-              onChange={handleChange}
-              className="p-3 border border-gray-300 rounded-md text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex flex-col space-y-1 flex-grow">
-            <label htmlFor="eventType" className="text-lg font-medium text-gray-700">Event Type</label>
-            <select
-              id="eventType"
-              value={formData.eventType}
-              onChange={handleChange}
-              className="p-3 border border-gray-300 rounded-md text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="" disabled>Select Event Type</option>
-              <option value="Conference">Conference</option>
-              <option value="Workshop">Workshop</option>
-              <option value="Seminar">Seminar</option>
-              <option value="Meetup">Meetup</option>
-            </select>
-          </div>
-        </div>
-        <Link to={'/view-event'}>
-        <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
-          Create Event
-        </button>
-        </Link>
-      </form>
-    </div>
-  );
+    );
 };
 
 export default CreateEvent;

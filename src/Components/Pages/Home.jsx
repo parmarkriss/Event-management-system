@@ -1,59 +1,49 @@
 import React, { useContext } from 'react';
-import { EventContext } from '../EventContext';
+import { EventContext } from './EventContext';
+import { UserContext } from '../UserContext';
 
 const Home = () => {
-  const { events } = useContext(EventContext);
+    const { events } = useContext(EventContext);
+    const { currentUser } = useContext(UserContext);
 
-  const upcomingEvents = events.filter(event => event.status === 'upcoming');
+    // Debugging: Log events and current user
+    console.log('Current User:', currentUser);
+    console.log('Events:', events);
 
-  return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-pink-950 text-center">Upcoming Events</h1>
-      {upcomingEvents.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {upcomingEvents.map(event => (
-            <div key={event.id} className="flex justify-center">
-              <div className="card w-full max-w-sm shadow-lg rounded-lg bg-white overflow-hidden">
-                {event.image && (
-                  <div className="w-full h-48 flex justify-center items-center">
-                    <img src={event.image} alt="Event" className="w-full h-full object-cover" />
-                  </div>
+    // Filter upcoming events for the current user
+    const upcomingEvents = currentUser
+        ? events.filter(event => {
+            const eventDate = new Date(event.date);
+            const currentDate = new Date();
+            return event.userId === currentUser.id && eventDate > currentDate;
+        })
+        : [];
+
+    return (
+        <div className="max-w-7xl mx-auto p-4">
+            <h1 className="text-3xl font-bold mb-4 text-gray-950 text-center">Upcoming Events</h1>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {upcomingEvents.length > 0 ? (
+                    upcomingEvents.map((event) => (
+                        <div key={event.title} className="bg-white border rounded-lg shadow-md p-4">
+                             {event.image && (
+                                <img src={event.image} alt="Event" className="w-full h-40 object-cover rounded mt-2" />
+                            )}
+                            <h2 className="text-xl font-semibold mb-2">{event.title}</h2>
+                            <p className="text-gray-700">{event.description}</p>
+                            <p className="text-gray-500">Date: {new Date(event.date).toLocaleDateString()}</p>
+                            <p className="text-gray-500">Location: {event.location}</p>
+                            <p className="text-gray-500">Max Attendees: {event.maxAttendees}</p>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-gray-500 text-center">
+                        {currentUser ? 'No upcoming events to display.' : 'Please log in to see your events.'}
+                    </p>
                 )}
-                <div className="p-4">
-                  <h3 className="text-xl font-semibold mb-2 text-gray-800">{event.title}</h3>
-                  <p className="text-gray-700 mb-4">{event.description}</p>
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-600">Date:</span>
-                      <span className="ml-2 text-gray-800">{event.date}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-600">Location:</span>
-                      <span className="ml-2 text-gray-800">{event.location}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-600">Max Attendees:</span>
-                      <span className="ml-2 text-gray-800">{event.maxAttendees}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-600">Event Type:</span>
-                      <span className="ml-2 text-gray-800">{event.eventType}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-600">Status:</span>
-                      <span className="ml-2 text-gray-800">{event.status}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
-          ))}
         </div>
-      ) : (
-        <p className="text-gray-600 text-center">No upcoming events available</p>
-      )}
-    </div>
-  );
+    );
 };
 
 export default Home;

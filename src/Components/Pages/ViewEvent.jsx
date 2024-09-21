@@ -1,125 +1,105 @@
 import React, { useContext, useState } from 'react';
-import { EventContext } from '../EventContext';
+import { EventContext } from './EventContext';
 import { UserContext } from '../UserContext';
 import { Link } from 'react-router-dom';
 
 const ViewEvent = () => {
-  const { events, deleteEvent } = useContext(EventContext);
-  const { user } = useContext(UserContext);
+    const { events, deleteEvent, setEvents } = useContext(EventContext);
+    const { currentUser } = useContext(UserContext);
+    const [location, setLocation] = useState('');
+    const [date, setDate] = useState('');
+    const [eventType, setEventType] = useState('');
 
-  const [searchType, setSearchType] = useState('');
-  const [searchDate, setSearchDate] = useState('');
-  const [searchLocation, setSearchLocation] = useState('');
-  const [eventTypeFilter, setEventTypeFilter] = useState('');
+    const userEvents = currentUser ? events.filter(event => {
+        const matchesUser = event.userId === currentUser.id;
+        const matchesLocation = location ? event.location.toLowerCase().includes(location.toLowerCase()) : true;
+        const matchesDate = date ? new Date(event.date).toLocaleDateString() === new Date(date).toLocaleDateString() : true;
+        const matchesType = eventType ? event.eventType === eventType : true;
 
-  const userEvents = events.filter(event => event.userId === user?.id);
+        return matchesUser && matchesLocation && matchesDate && matchesType;
+    }) : [];
 
-  const filteredEvents = userEvents.filter(event => {
+    const handleDelete = (eventId) => {
+        const updatedEvents = events.filter(event => event.id !== eventId);
+        setEvents(updatedEvents);
+        localStorage.setItem('events', JSON.stringify(updatedEvents)); // Update localStorage
+    };
+
+    const handleRSVP = (eventId) => {
+        const updatedEvents = events.map(event => {
+          if (event.id === eventId) {
+            const rsvpList = event.rsvpList || [];
+            if (currentUser && !rsvpList.includes(currentUser.id) && rsvpList.length < event.maxAttendees) {
+              alert(`RSVP successful for event: ${event.title}`);
+              return {
+                ...event,
+                rsvpList: [...rsvpList, currentUser.id] // Add user to RSVP list
+              };
+            } else if (rsvpList.includes(currentUser.id)) {
+              alert('You have already RSVPed for this event.');
+            } else if (rsvpList.length >= event.maxAttendees) {
+              alert('Sorry, the event has reached the maximum number of attendees.');
+            }
+          }
+          return event;
+        });
+    
+        setEvents(updatedEvents);
+        localStorage.setItem('events', JSON.stringify(updatedEvents)); // Save updated events to localStorage
+      };
+
     return (
-      (searchType === '' || event.title.toLowerCase().includes(searchType.toLowerCase())) &&
-      (searchDate === '' || event.date === searchDate) &&
-      (searchLocation === '' || event.location.toLowerCase().includes(searchLocation.toLowerCase())) &&
-      (eventTypeFilter === '' || event.eventType === eventTypeFilter)
-    );
-  });
-
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this event?')) {
-      deleteEvent(id);
-    }
-  };
-
-  const handleReset = () => {
-    setSearchType('');
-    setSearchDate('');
-    setSearchLocation('');
-    setEventTypeFilter('');
-  };
-
-  return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
-      <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-pink-950 text-center">Event Details</h2>
-      <div className="mb-6 text-center flex flex-col sm:flex-row items-center justify-center gap-4">
-        <input
-          type="date"
-          value={searchDate}
-          onChange={(e) => setSearchDate(e.target.value)}
-          className="border p-2 rounded-md w-full sm:w-64"
-        />
-        <input
-          type="text"
-          placeholder="Search by Location"
-          value={searchLocation}
-          onChange={(e) => setSearchLocation(e.target.value)}
-          className="border p-2 rounded-md w-full sm:w-64"
-        />
-        <select
-          id="eventType"
-          value={eventTypeFilter}
-          onChange={(e) => setEventTypeFilter(e.target.value)}
-          className="p-3 border border-gray-300 rounded-md text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">All Types</option>
-          <option value="Conference">Conference</option>
-          <option value="Workshop">Workshop</option>
-          <option value="Seminar">Seminar</option>
-          <option value="Meetup">Meetup</option>
-        </select>
-        <button
-          onClick={handleReset}
-          className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600"
-        >
-          Reset
-        </button>
-      </div>
-
-      {filteredEvents.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map(event => (
-            <div key={event.id} className="flex justify-center">
-              <div className="card w-full max-w-sm shadow-lg rounded-lg bg-white overflow-hidden">
-                {event.image && (
-                  <div className="w-full h-48 sm:h-56 lg:h-64 flex justify-center items-center">
-                    <img src={event.image} alt="Event" className="w-full h-full object-cover" />
-                  </div>
-                )}
-                <div className="p-4">
-                  <h3 className="text-lg sm:text-xl font-semibold mb-2 text-gray-800">{event.title}</h3>
-                  <p className="text-gray-700 mb-4">{event.description}</p>
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-600">Date:</span>
-                      <span className="ml-2 text-gray-800">{event.date}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-600">Location:</span>
-                      <span className="ml-2 text-gray-800">{event.location}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-600">Max Attendees:</span>
-                      <span className="ml-2 text-gray-800">{event.maxAttendees}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-600">Event Type:</span>
-                      <span className="ml-2 text-gray-800">{event.eventType}</span>
-                    </div>
-                    <div className="flex gap-4 mt-4">
-                      <Link to={`/editevent/${event.id}`}>
-                        <button className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">Edit</button>
-                      </Link>
-                      <button onClick={() => handleDelete(event.id)} className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600">Delete</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <div className="max-w-7xl mx-auto p-4">
+            <h1 className="text-3xl font-bold mb-4 text-gray-950 text-center">Your Events</h1>
+            <div className="mb-4 flex flex-col md:flex-row justify-center space-x-2">
+                {/* Search Filters */}
+                {/* ... */}
             </div>
-          ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {userEvents.length > 0 ? (
+                    userEvents.map((event) => (
+                        <div key={event.id} className="bg-white border rounded-lg shadow-md p-4">
+                            {event.image && (
+                                <img src={event.image} alt="Event" className="w-full h-40 object-cover rounded mt-2" />
+                            )}
+                            <h2 className="text-xl font-semibold mb-2 mt-2">{event.title}</h2>
+                            <p className="text-gray-700">{event.description}</p>
+                            <p className="text-gray-500">Date: {new Date(event.date).toLocaleDateString()}</p>
+                            <p className="text-gray-500">Location: {event.location}</p>
+                            <p className="text-gray-500">Max Attendees: {event.maxAttendees}</p>
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={() => handleRSVP(event.id)}
+                                disabled={!currentUser || event.rsvpList?.includes(currentUser.id) || (event.rsvpList?.length >= event.maxAttendees)}
+                            >
+                                {event.rsvpList?.includes(currentUser?.id) ? "RSVP'd" : "RSVP"}
+                            </button>
+                            <Link to={`/edit-event/${event.id}`}>
+                                <button
+                                    type='button'
+                                    className='btn btn-info me-2'
+                                >
+                                    Edit
+                                </button>
+                            </Link>
+                            <button
+                                type='button'
+                                className='btn btn-danger'
+                                onClick={() => handleDelete(event.id)} // Updated to handleDelete
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-gray-500 text-center">
+                        {currentUser ? 'No events to display.' : 'Please log in to view your events.'}
+                    </p>
+                )}
+            </div>
         </div>
-      ) : (
-        <p className="text-gray-600 text-center">No events available</p>
-      )}
-    </div>
-  );
+    );
 };
 
 export default ViewEvent;

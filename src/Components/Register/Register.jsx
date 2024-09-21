@@ -1,52 +1,40 @@
-import React, { useContext, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from '../UserContext';
 
 const Register = () => {
-  const { saveUser } = useContext(UserContext);
+  const navigate = useNavigate();
+  const { registerUser } = useContext(UserContext);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     firstName: '',
     lastName: '',
-    country: 'United States',
+    country: '',
     postalCode: ''
   });
 
   const handleChange = (e) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [id]: value
-    }));
+    setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!formData.email || !formData.password || !formData.firstName || !formData.lastName || !formData.postalCode) {
-      alert('Please fill out all fields.');
-      return;
-    }
-    
-    saveUser(formData);
-    alert('Registration successful!');
-    
-    setFormData({
-      email: '',
-      password: '',
-      firstName: '',
-      lastName: '',
-      country: 'United States',
-      postalCode: ''
-    });
+        alert('Please fill out all fields.');
+        return;
+      }
+    registerUser(formData);
+    alert("Register successfully");
+    navigate('/'); //login page
   };
 
   return (
     <div className="bg-gray-100 min-h-screen flex items-center justify-center">
       <div className="bg-blue-900 container mx-auto p-5 shadow-lg rounded-lg">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Content visible only on larger screens */}
+          {/* Left section */}
           <div className="hidden md:block">
             <h1 className="text-5xl font-bold mb-4 text-yellow-400">Your All-Access Pass</h1>
             <p className="mb-4 text-white">Discover and manage all your events in one place...</p>
@@ -56,10 +44,12 @@ const Register = () => {
               className="w-full h-auto rounded-lg shadow-md"
             />
           </div>
+
+          {/* Registration form */}
           <div>
             <h2 className="text-2xl font-bold mb-4 text-black">Sign Up</h2>
-            <p className="mb-4 text-white">Already have a Ticketmaster Account? <Link to="/login" className="text-blue-500 hover:underline">Sign In</Link></p>
             <form onSubmit={handleSubmit}>
+              {/* Email field */}
               <div className="mb-3">
                 <label htmlFor="email" className="block text-white">Email</label>
                 <input
@@ -67,10 +57,11 @@ const Register = () => {
                   className="w-full p-2 border border-gray-300 rounded"
                   id="email"
                   placeholder="Enter your email"
-                  value={formData.email}
                   onChange={handleChange}
                 />
               </div>
+
+              {/* Password field */}
               <div className="mb-3">
                 <label htmlFor="password" className="block text-white">Password</label>
                 <input
@@ -78,10 +69,11 @@ const Register = () => {
                   className="w-full p-2 border border-gray-300 rounded"
                   id="password"
                   placeholder="Enter your password"
-                  value={formData.password}
                   onChange={handleChange}
                 />
               </div>
+
+              {/* First Name and Last Name */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                 <div>
                   <label htmlFor="firstName" className="block text-white">First Name</label>
@@ -90,7 +82,6 @@ const Register = () => {
                     className="w-full p-2 border border-gray-300 rounded"
                     id="firstName"
                     placeholder="Enter your first name"
-                    value={formData.firstName}
                     onChange={handleChange}
                   />
                 </div>
@@ -101,18 +92,18 @@ const Register = () => {
                     className="w-full p-2 border border-gray-300 rounded"
                     id="lastName"
                     placeholder="Enter your last name"
-                    value={formData.lastName}
                     onChange={handleChange}
                   />
                 </div>
               </div>
+
+              {/* Country and Postal Code */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                 <div>
                   <label htmlFor="country" className="block text-white">Country of Residence</label>
                   <select
                     className="w-full p-2 border border-gray-300 rounded"
                     id="country"
-                    value={formData.country}
                     onChange={handleChange}
                   >
                     <option value="United States">United States</option>
@@ -129,11 +120,11 @@ const Register = () => {
                     className="w-full p-2 border border-gray-300 rounded"
                     id="postalCode"
                     placeholder="Enter your zip/postal code"
-                    value={formData.postalCode}
                     onChange={handleChange}
                   />
                 </div>
               </div>
+
               <button type="submit" className="w-full bg-orange-700 text-white py-2 px-4 rounded hover:bg-orange-800">Next</button>
             </form>
           </div>
